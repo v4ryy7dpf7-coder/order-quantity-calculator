@@ -137,44 +137,26 @@
     </div>
   </div>
 
-  <div class="card" id="autobox" style="display:none">
-    <label>台の売上から推定</label>
-    <div class="row">
-      <div>
-        <label style="text-align:center">台の週売上（円）</label>
-        <input type="text" class="money" id="daily" inputmode="numeric" placeholder="56,000">
-      </div>
-      <div>
-        <label style="text-align:center">景品の原価（円）</label>
-        <input type="text" class="money" id="pcost" inputmode="numeric" placeholder="800">
-      </div>
+  <div class="card">
+    <label>投入期間</label>
+    <div class="seg" id="dayseg">
+      <button data-days="1" aria-pressed="false">1日</button>
+      <button data-days="7" aria-pressed="false">1週間</button>
+      <button data-days="14" aria-pressed="false">2週間</button>
+      <button data-days="28" aria-pressed="false">4週間</button>
     </div>
     <div class="row" style="margin-top:12px">
       <div>
-        <label style="text-align:center">目標原価率（%）</label>
-        <input type="number" id="rate" inputmode="numeric" placeholder="25">
-      </div>
-      <div>
-        <label style="text-align:center">投入日数</label>
+        <label style="text-align:center">日数</label>
         <input type="number" id="days" inputmode="numeric" placeholder="28">
-      </div>
-    </div>
-    <div style="margin-top:12px">
-      <label>投入期間（よく使う長さ）</label>
-      <div class="seg" id="dayseg">
-        <button data-days="1" aria-pressed="false">1日</button>
-        <button data-days="7" aria-pressed="false">1週間</button>
-        <button data-days="14" aria-pressed="false">2週間</button>
-        <button data-days="28" aria-pressed="false">4週間</button>
       </div>
     </div>
     <div style="margin-top:12px">
       <label>開始日（曜日の重みを数えます）</label>
       <input type="date" id="start">
     </div>
-    <p class="hint" id="autoout">P・M・O：–</p>
     <details>
-      <summary>曜日の倍率・ばらつきを調整する</summary>
+      <summary>曜日の倍率を調整する</summary>
       <p class="hint" style="margin-top:8px">月〜木を 1.0 としたときの倍率</p>
       <div class="row" style="margin-top:6px">
         <div>
@@ -190,7 +172,29 @@
           <input type="number" id="ksun" inputmode="decimal" step="0.1" value="2.4">
         </div>
       </div>
-      <p class="hint" style="margin-top:12px">ばらつきの幅（M に対する倍率）</p>
+    </details>
+  </div>
+
+  <div class="card" id="autobox" style="display:none">
+    <label>台の売上から推定</label>
+    <div class="row">
+      <div>
+        <label style="text-align:center">台の週売上（円）</label>
+        <input type="text" class="money" id="daily" inputmode="numeric" placeholder="56,000">
+      </div>
+      <div>
+        <label style="text-align:center">景品の原価（円）</label>
+        <input type="text" class="money" id="pcost" inputmode="numeric" placeholder="800">
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label>目標原価率（%）</label>
+      <input type="number" id="rate" inputmode="numeric" placeholder="25">
+    </div>
+    <p class="hint" id="autoout">P・M・O：–</p>
+    <details>
+      <summary>ばらつきの幅を調整する</summary>
+      <p class="hint" style="margin-top:8px">ばらつきの幅（M に対する倍率）</p>
       <div class="row" style="margin-top:6px">
         <div>
           <label style="text-align:center">下振れ（P）</label>
@@ -206,7 +210,13 @@
   </div>
 
   <div class="card" id="manualbox">
-    <label>見立て（この投入期間に何個取られるか）</label>
+    <label>見立ての単位</label>
+    <div class="seg" id="unitseg">
+      <button data-u="period" aria-pressed="true">期間全体で</button>
+      <button data-u="day" aria-pressed="false">1日あたり</button>
+      <button data-u="week" aria-pressed="false">1週間あたり</button>
+    </div>
+    <label style="margin-top:14px">見立て（何個取られるか）</label>
     <div class="row">
       <div>
         <label style="text-align:center">P 悲観</label>
@@ -221,6 +231,7 @@
         <input type="number" id="o" inputmode="numeric" placeholder="60">
       </div>
     </div>
+    <p class="hint" id="manualout">期間合計：–</p>
     <p class="hint"><b>O と P は「あり得る範囲の端」</b>で、絶対にあり得ない極端な数字ではありません。目安は<b>10回に1回くらい起きる水準</b>。「最高に当たったら」「全然ダメだったら」と両端から聞くと出しやすくなります。</p>
     <p class="warn" id="warn" style="display:none"></p>
   </div>
@@ -252,6 +263,11 @@
 
   <div class="card" id="crcard">
     <label>臨界比 CR</label>
+    <p class="hint" style="margin-top:0">
+      <b>仕入れすぎた損</b>と<b>品切れで取り逃がした損</b>を天秤にかけた数字です。
+      数字が大きいほど「品切れの方が痛い」と考え、多めに発注します。
+      迷ったら 0.75、品切れを避けたいなら 0.85。金額で決めたい時は「金額から」を選んでください。
+    </p>
     <div class="seg" id="crseg">
       <button data-cr="0.75" aria-pressed="true">0.75</button>
       <button data-cr="0.8" aria-pressed="false">0.80</button>
@@ -271,13 +287,18 @@
         </div>
       </div>
       <div style="margin-top:10px">
-        <label>残存価値／個（他店舗へ移して使える分＋回収額）</label>
+        <label>残存価値／個</label>
+        <p class="hint" style="margin-top:0">
+          余った景品が<b>まだ生む価値</b>のことです。他店舗へ移して使える分や、事故台などで回収できる額を指します。
+          ここが大きいほど「余っても無駄にならない」ので、多めに発注してよいことになります。
+          逆に賞味期限切れや旬を過ぎた景品はゼロに近づき、<b>廃棄にお金がかかる場合はマイナス</b>になります。
+        </p>
         <input type="text" class="money" id="salv" inputmode="numeric" placeholder="0">
       </div>
 
-      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line)">
-        <label>残存価値の見積もりサポート</label>
-        <p class="hint" style="margin-top:0">3つ選ぶと、上の残存価値に自動で入ります。</p>
+      <details style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line)">
+        <summary>残存価値の見積もりサポート</summary>
+        <p class="hint" style="margin-top:6px">選ぶと、上の残存価値に自動で入ります。</p>
 
         <p class="hint" style="margin-top:12px; color:var(--ink)">① 余った分を他店・他台で使い切れるか</p>
         <div class="seg" id="segUse">
@@ -314,7 +335,13 @@
         </div>
 
         <div style="margin-top:12px">
-          <label>④ 移送・保管の手間（1個あたり・円）</label>
+          <label>④ 廃棄にかかる費用（1個あたり・円）</label>
+          <input type="text" class="money" id="disposal" inputmode="numeric" placeholder="0">
+          <p class="hint">使い切れずに捨てる分の処分費。かからなければ空欄のままで構いません。</p>
+        </div>
+
+        <div style="margin-top:12px">
+          <label>⑤ 移送・保管の手間（1個あたり・円）</label>
           <input type="text" class="money" id="movecost" inputmode="numeric" placeholder="50">
           <details style="margin-top:6px">
             <summary>手間を計算する</summary>
@@ -342,7 +369,7 @@
           </details>
         </div>
         <p class="hint" id="salvout">残存価値：–</p>
-      </div>
+      </details>
 
       <p class="hint" id="crout">CR：–</p>
     </details>
@@ -420,8 +447,16 @@
     return out;
   }
 
+  // 数値として読む：全角を半角に直し、カンマや空白を取り除く（小数点と符号は残す）
   function num(id){
-    var v = parseFloat(digitsOnly(String($(id).value)));
+    var str = String($(id).value), out = '';
+    for (var i = 0; i < str.length; i++){
+      var c = str.charCodeAt(i);
+      if (c >= 0xFF10 && c <= 0xFF19) out += String.fromCharCode(c - 0xFF10 + 48);  // ０-９
+      else if ((c >= 48 && c <= 57) || str[i] === '.' || str[i] === '-') out += str[i];
+      else if (c === 0xFF0E) out += '.';                                            // ．
+    }
+    var v = parseFloat(out);
     return isFinite(v) ? v : null;
   }
 
@@ -436,46 +471,73 @@
     });
   });
 
-  function estimate(){
-    var daily = num('daily'), days = num('days'), pcost = num('pcost'), rate = num('rate');
-    var lowk = num('lowk'), highk = num('highk');
+  // 投入期間の「日数ぶんの重み合計」。曜日の重みを数え、1日平均を1として合計する
+  function periodFactor(){
+    var days = num('days');
+    if (days === null || days <= 0) return null;
     var kfri = num('kfri'), ksat = num('ksat'), ksun = num('ksun');
-    if (lowk === null || lowk <= 0) lowk = 0.6;
-    if (highk === null || highk <= 0) highk = 1.5;
     if (kfri === null || kfri <= 0) kfri = 1.25;
     if (ksat === null || ksat <= 0) ksat = 2.2;
     if (ksun === null || ksun <= 0) ksun = 2.4;
+    var k = [ksun, 1, 1, 1, 1, kfri, ksat];          // 日,月,火,水,木,金,土
+    var weekAvg = (4 + kfri + ksat + ksun) / 7;
+    var startStr = $('start').value;
+    if (!startStr) return { total: days, days: days, adj: 1 };
+    var d = new Date(startStr + 'T00:00:00');
+    var total = 0;
+    for (var n = 0; n < days; n++){
+      total += k[d.getDay()] / weekAvg;
+      d.setDate(d.getDate() + 1);
+    }
+    return { total: total, days: days, adj: total / days };
+  }
 
-    if (daily === null || days === null || days <= 0 || pcost === null || rate === null || rate <= 0 || pcost <= 0){
+  function estimate(){
+    var daily = num('daily'), pcost = num('pcost'), rate = num('rate');
+    var lowk = num('lowk'), highk = num('highk');
+    if (lowk === null || lowk <= 0) lowk = 0.6;
+    if (highk === null || highk <= 0) highk = 1.5;
+    var pf = periodFactor();
+
+    if (daily === null || pf === null || pcost === null || rate === null || rate <= 0 || pcost <= 0){
       $('autoout').textContent = 'P・M・O：–　（週売上・原価・原価率・日数を入れてください）';
       return null;
     }
-    var perDay = daily / 7;   // 週売上 → 1日平均
-
-    // 月〜木=1.0 を基準にした曜日係数。1週間の平均が 1 になるよう正規化する
-    var k = [ksun, 1, 1, 1, 1, kfri, ksat];           // 日,月,火,水,木,金,土
-    var weekAvg = (4 + kfri + ksat + ksun) / 7;
-    var startStr = $('start').value;
-    var total = 0, note = '';
-
-    if (startStr){
-      var d = new Date(startStr + 'T00:00:00');
-      for (var n = 0; n < days; n++){
-        total += k[d.getDay()] / weekAvg;
-        d.setDate(d.getDate() + 1);
-      }
-      note = '曜日補正 ' + (total / days).toFixed(2) + '倍　';
-    } else {
-      total = days;                                    // 開始日なしなら平均的な曜日構成とみなす
-      note = '開始日を入れると曜日で補正　';
-    }
-
+    var perDay = daily / 7;                            // 週売上 → 1日平均
     var perPiece = pcost / (rate / 100);               // 1個あたり売上
-    var m = (perDay * total) / perPiece;               // 想定払い出し個数
+    var m = (perDay * pf.total) / perPiece;            // 想定払い出し個数
     var est = { m: Math.round(m), o: Math.round(m * highk), p: Math.round(m * lowk), per: Math.round(perPiece) };
-    $('autoout').textContent = note + '1個あたり売上 ' + est.per + '円 ／ P ' + est.p + ' ・ M ' + est.m + ' ・ O ' + est.o;
+    var note = $('start').value ? '曜日補正 ' + pf.adj.toFixed(2) + '倍　' : '開始日を入れると曜日で補正　';
+    $('autoout').textContent = note + '1個あたり売上 ' + comma(est.per) + '円 ／ P ' + est.p + ' ・ M ' + est.m + ' ・ O ' + est.o;
     return est;
   }
+
+  // 人が見立てた値を、投入期間の合計に換算する
+  var manualUnit = 'period';
+  function manualValues(){
+    var o = num('o'), m = num('m'), p = num('p');
+    if (o === null || m === null || p === null){ $('manualout').textContent = '期間合計：–'; return null; }
+    if (manualUnit === 'period'){ $('manualout').textContent = '期間合計：P ' + o0(p) + ' ・ M ' + o0(m) + ' ・ O ' + o0(o); return { o: o, m: m, p: p }; }
+    var pf = periodFactor();
+    if (pf === null){ $('manualout').textContent = '期間合計：–　（日数を入れてください）'; return null; }
+    var mul = manualUnit === 'day' ? pf.total : pf.total / 7;
+    var r = { o: o * mul, m: m * mul, p: p * mul };
+    $('manualout').textContent = '期間合計：P ' + o0(r.p) + ' ・ M ' + o0(r.m) + ' ・ O ' + o0(r.o)
+      + '　（' + (manualUnit === 'day' ? '1日' : '1週間') + 'の値 × ' + mul.toFixed(2) + '）';
+    return r;
+  }
+  function o0(n){ return Math.round(n); }
+
+  Array.prototype.forEach.call(document.querySelectorAll('#unitseg button'), function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('#unitseg button'), function(b){
+        b.setAttribute('aria-pressed','false');
+      });
+      btn.setAttribute('aria-pressed','true');
+      manualUnit = btn.dataset.u;
+      calc();
+    });
+  });
 
   var salvSel = { use: 0.8, fresh: 0.8, food: 0 };
 
@@ -526,13 +588,18 @@
     if (cost === null || cost <= 0){ $('salvout').textContent = '残存価値：–　（仕入価格を入れてください）'; return; }
     var move = num('movecost');
     if (move === null) move = 50;
+    var disp = num('disposal') || 0;
     var ff = foodFactor();
-    var v = cost * salvSel.use * salvSel.fresh * ff - move;
-    if (v < 0) v = 0;
+
+    // 使い切れる分は価値になり、使い切れない分は廃棄費用がかかる
+    var keepRate = salvSel.use * ff;
+    var v = cost * keepRate * salvSel.fresh - move * keepRate - disp * (1 - keepRate);
     v = Math.round(v);
-    $('salv').value = comma(v);
-    $('salvout').textContent = '残存価値：' + comma(v) + '円　（' + comma(cost) + ' × ' + salvSel.use
-      + ' × ' + salvSel.fresh + (salvSel.food ? ' × ' + ff.toFixed(2) : '') + ' − ' + move + '）';
+
+    $('salv').value = (v < 0 ? '-' : '') + comma(Math.abs(v));
+    $('salvout').textContent = '残存価値：' + (v < 0 ? '−' : '') + comma(Math.abs(v)) + '円'
+      + (v < 0 ? '（廃棄費用が上回るためマイナス）' : '')
+      + '　（使える割合 ' + (keepRate * 100).toFixed(0) + '%）';
   }
 
   function segPick(boxId, key){
@@ -560,7 +627,7 @@
   });
 
   // サポート欄を操作した時だけ、残存価値・移送費を自動で埋める
-  ['expiry','selldays','cost'].forEach(function(id){
+  ['expiry','selldays','cost','disposal'].forEach(function(id){
     $(id).addEventListener('input', function(){ salvage(); calc(); });
   });
   ['tripcost','tripqty','worktime','wage'].forEach(function(id){
@@ -573,7 +640,8 @@
       var est = estimate();
       if (est){ o = est.o; m = est.m; p = est.p; } else { o = m = p = null; }
     } else {
-      o = num('o'); m = num('m'); p = num('p');
+      var mv = manualValues();
+      if (mv){ o = mv.o; m = mv.m; p = mv.p; } else { o = m = p = null; }
     }
     var warn = $('warn');
     warn.style.display = 'none';
@@ -607,7 +675,10 @@
         : 'O・M・P を入れてください';
       return;
     }
-    if (!(o >= m && m >= p)){
+    if (o < 0 || m < 0 || p < 0){
+      warn.textContent = '0以上の数字を入れてください。';
+      warn.style.display = 'block';
+    } else if (!(o >= m && m >= p)){
       warn.textContent = '数値の大小が合いません（O ≧ M ≧ P）。';
       warn.style.display = 'block';
     }
@@ -845,7 +916,7 @@
 
   ['o','m','p','rev','cost','salv','unit','uname','name','vendor',
    'daily','days','pcost','rate','lowk','highk','start','kfri','ksat','ksun','movecost',
-   'expiry','selldays','tripcost','tripqty','worktime','wage'].forEach(function(id){
+   'expiry','selldays','tripcost','tripqty','worktime','wage','disposal'].forEach(function(id){
     $(id).addEventListener('input', calc);
   });
 
