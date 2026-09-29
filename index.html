@@ -41,6 +41,7 @@
   .qunit{font-size:26px; font-weight:700; margin-left:6px}
   .qlabel{font-size:16px; opacity:.85; margin:0 0 6px; letter-spacing:.5px}
   .qsub{font-size:16px; opacity:.9; margin:14px 0 0; line-height:1.8}
+  .alert{margin-top:14px; padding:12px 14px; border-radius:12px; background:#5a2a20; color:#ffd9cc; font-size:16px; line-height:1.6; text-align:left}
   label{display:block; font-size:16px; color:var(--sub); margin-bottom:6px; font-weight:600}
   .row{display:flex; gap:10px}
   .row>div{flex:1}
@@ -63,9 +64,9 @@
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
   input:focus{outline:2px solid var(--teal); outline-offset:1px}
   .hint{font-size:16px; color:var(--sub); margin:8px 0 0; line-height:1.8}
-  .seg{display:flex; gap:8px; margin-top:4px}
+  .seg{display:flex; gap:8px; margin-top:4px; flex-wrap:wrap}
   .seg button{
-    flex:1; padding:12px 4px; font-size:16px; font-weight:600; font-family:inherit;
+    flex:1; min-width:80px; padding:12px 4px; font-size:16px; font-weight:600; font-family:inherit;
     border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); cursor:pointer;
   }
   .seg button[aria-pressed="true"]{background:var(--teal); border-color:var(--teal); color:#fff}
@@ -77,10 +78,6 @@
   .switch[aria-pressed="true"]{background:var(--accent); border-color:var(--accent)}
   .knob{position:absolute; top:3px; left:3px; width:26px; height:26px; border-radius:50%; background:#fff; transition:left .15s}
   .switch[aria-pressed="true"] .knob{left:29px}
-  .breakdown{display:flex; gap:8px; margin-top:12px}
-  .breakdown div{flex:1; background:var(--soft); border-radius:10px; padding:8px 4px; text-align:center}
-  .bk{font-size:12px; color:var(--sub)}
-  .bv{font-size:20px; font-weight:700}
   details{margin-top:4px}
   summary{font-size:17px; color:var(--teal); font-weight:600; cursor:pointer; padding:6px 0}
   .warn{color:var(--accent); font-size:16px; margin:10px 0 0}
@@ -90,7 +87,6 @@
     border-radius:14px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;
   }
   .btn.primary{background:var(--teal); border-color:var(--teal); color:#fff}
-  .btn:disabled{opacity:.45; cursor:default}
   .rec{border-top:1px solid var(--line); padding:12px 0}
   .rec:first-of-type{border-top:none}
   .rec h3{font-size:17px; margin:0 0 2px; font-weight:700}
@@ -108,6 +104,10 @@
   }
   .toast.show{opacity:1}
   .foot{font-size:15px; color:var(--sub); text-align:center; margin-top:18px; line-height:1.8}
+  table.err{width:100%; border-collapse:collapse; margin-top:8px; font-size:15px}
+  table.err th,table.err td{border-bottom:1px solid var(--line); padding:6px 4px; text-align:left}
+  table.err th{color:var(--sub); font-weight:600}
+  table.err td:last-child,table.err th:last-child{text-align:right}
 </style>
 </head>
 <body>
@@ -118,6 +118,7 @@
     <p class="qlabel" id="qlabel">発注量</p>
     <div><span class="qnum" id="q">–</span><span class="qunit" id="qunit">個</span></div>
     <p class="qsub" id="qsub">O・M・P を入れてください</p>
+    <div class="alert" id="alert" style="display:none"></div>
   </div>
 
   <div class="card">
@@ -140,20 +141,38 @@
   <div class="card">
     <label>投入期間</label>
     <div class="seg" id="dayseg">
-      <button data-days="1" aria-pressed="false">1日</button>
-      <button data-days="7" aria-pressed="false">1週間</button>
+      <button data-days="7" aria-pressed="true">1週間</button>
+      <button data-days="10" aria-pressed="false">10日</button>
       <button data-days="14" aria-pressed="false">2週間</button>
       <button data-days="28" aria-pressed="false">4週間</button>
     </div>
     <div class="row" style="margin-top:12px">
       <div>
         <label style="text-align:center">日数</label>
-        <input type="number" id="days" inputmode="numeric" placeholder="28">
+        <input type="number" id="days" inputmode="numeric" value="7">
       </div>
     </div>
+    <p class="hint"><b>1週間を基準にしてください。</b>長い期間をまとめて見積もるほど、当たらなくなります。景品の入れ替わりは実績でも中央9日でした。</p>
     <div style="margin-top:12px">
       <label>開始日（曜日の重みを数えます）</label>
       <input type="date" id="start">
+    </div>
+    <p class="hint">1週間ちょうどなら、どの曜日から始めても結果は変わりません。半端な日数のときだけ効きます。</p>
+    <div style="margin-top:14px">
+      <label>期間に祝日が何日ありますか</label>
+      <div class="seg" id="holseg">
+        <button data-h="0" aria-pressed="true">なし</button>
+        <button data-h="1" aria-pressed="false">1日</button>
+        <button data-h="2" aria-pressed="false">2日</button>
+        <button data-h="3" aria-pressed="false">3日</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div>
+          <label style="text-align:center">日数</label>
+          <input type="number" id="holidays" inputmode="numeric" value="0">
+        </div>
+      </div>
+      <p class="hint" id="holout">祝日は<b>日曜の80%</b>の売上として計算します。期間内で売上の低い日から順に置き換えます。シルバーウィーク（3連休）の実績を参考にした係数です。連休の中日は日曜ほど跳ねないためです。</p>
     </div>
     <details>
       <summary>曜日の倍率を調整する</summary>
@@ -161,17 +180,18 @@
       <div class="row" style="margin-top:6px">
         <div>
           <label style="text-align:center">金</label>
-          <input type="number" id="kfri" inputmode="decimal" step="0.05" value="1.25">
+          <input type="number" id="kfri" inputmode="decimal" step="0.05" value="1.30">
         </div>
         <div>
           <label style="text-align:center">土</label>
-          <input type="number" id="ksat" inputmode="decimal" step="0.1" value="2.2">
+          <input type="number" id="ksat" inputmode="decimal" step="0.05" value="2.30">
         </div>
         <div>
           <label style="text-align:center">日</label>
-          <input type="number" id="ksun" inputmode="decimal" step="0.1" value="2.4">
+          <input type="number" id="ksun" inputmode="decimal" step="0.05" value="2.50">
         </div>
       </div>
+      <p class="hint">土日1日は平日の約2.3倍、土日で週売上のほぼ半分を占めます。</p>
     </details>
   </div>
 
@@ -194,18 +214,17 @@
     <p class="hint" id="autoout">P・M・O：–</p>
     <details>
       <summary>ばらつきの幅を調整する</summary>
-      <p class="hint" style="margin-top:8px">ばらつきの幅（M に対する倍率）</p>
+      <p class="hint" style="margin-top:8px">点推定 M に対する倍率です。</p>
       <div class="row" style="margin-top:6px">
         <div>
-          <label style="text-align:center">下振れ（P）</label>
-          <input type="number" id="lowk" inputmode="decimal" step="0.1" value="0.6">
+          <label style="text-align:center">下振れ P</label>
+          <input type="number" id="lowk" inputmode="decimal" step="0.05" value="0.6">
         </div>
         <div>
-          <label style="text-align:center">上振れ（O）</label>
-          <input type="number" id="highk" inputmode="decimal" step="0.1" value="1.5">
+          <label style="text-align:center">上振れ O</label>
+          <input type="number" id="highk" inputmode="decimal" step="0.05" value="1.5">
         </div>
       </div>
-      <p class="hint">実績が貯まったら、実際の数字に合わせて直してください。</p>
     </details>
   </div>
 
@@ -252,13 +271,12 @@
   </div>
 
   <div class="card">
-    <div class="toggle">
-      <div>
-        <label style="margin:0">追加発注できる</label>
-        <p class="hint" style="margin-top:2px">オンなら μ だけで控えめに発注</p>
-      </div>
-      <button class="switch" id="reorder" aria-pressed="false" aria-label="追加発注できる"><span class="knob"></span></button>
+    <label>あとから追加発注できますか</label>
+    <div class="seg" id="reorderseg">
+      <button data-r="0" aria-pressed="true">できない</button>
+      <button data-r="1" aria-pressed="false">できる</button>
     </div>
+    <p class="hint" id="reorderout"><b>「できない」を選択中。</b>品切れに備えて、安全側に上乗せした数を出します。</p>
   </div>
 
   <div class="card" id="crcard">
@@ -266,12 +284,12 @@
     <p class="hint" style="margin-top:0">
       <b>仕入れすぎた損</b>と<b>品切れで取り逃がした損</b>を天秤にかけた数字です。
       数字が大きいほど「品切れの方が痛い」と考え、多めに発注します。
-      迷ったら 0.75、品切れを避けたいなら 0.85。金額で決めたい時は「金額から」を選んでください。
+      検証では 0.60 が一番バランスが良い結果でした。品切れを避けたい景品は 0.70 以上にしてください。
     </p>
     <div class="seg" id="crseg">
-      <button data-cr="0.75" aria-pressed="true">0.75</button>
-      <button data-cr="0.8" aria-pressed="false">0.80</button>
-      <button data-cr="0.85" aria-pressed="false">0.85</button>
+      <button data-cr="0.5" aria-pressed="false">0.50</button>
+      <button data-cr="0.6" aria-pressed="true">0.60</button>
+      <button data-cr="0.7" aria-pressed="false">0.70</button>
       <button data-cr="custom" aria-pressed="false">金額から</button>
     </div>
     <details id="crcalc">
@@ -395,11 +413,11 @@
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var state = { cr: 0.75, mode: 'preset', reorder: false, input: 'manual' };
+  var state = { cr: 0.60, mode: 'preset', reorder: false, input: 'manual' };
   var last = null;
 
   try {
-    var saved = localStorage.getItem('orderqty-cr');
+    var saved = localStorage.getItem('orderqty-cr2');
     if (saved) { var v = parseFloat(saved); if (v > 0 && v < 1) state.cr = v; }
   } catch(e) {}
 
@@ -428,13 +446,12 @@
     var out = '';
     for (var i = 0; i < str.length; i++){
       var c = str.charCodeAt(i);
-      if (c >= 0xFF10 && c <= 0xFF19) out += String.fromCharCode(c - 0xFF10 + 48);  // ０-９
-      else if (c >= 48 && c <= 57) out += str[i];                                    // 0-9
+      if (c >= 0xFF10 && c <= 0xFF19) out += String.fromCharCode(c - 0xFF10 + 48);
+      else if (c >= 48 && c <= 57) out += str[i];
     }
     return out;
   }
 
-  // 3桁ごとにカンマを入れる（正規表現を使わない）
   function comma(n){
     var str = digitsOnly(String(n));
     if (!str) return '';
@@ -452,9 +469,9 @@
     var str = String($(id).value), out = '';
     for (var i = 0; i < str.length; i++){
       var c = str.charCodeAt(i);
-      if (c >= 0xFF10 && c <= 0xFF19) out += String.fromCharCode(c - 0xFF10 + 48);  // ０-９
+      if (c >= 0xFF10 && c <= 0xFF19) out += String.fromCharCode(c - 0xFF10 + 48);
       else if ((c >= 48 && c <= 57) || str[i] === '.' || str[i] === '-') out += str[i];
-      else if (c === 0xFF0E) out += '.';                                            // ．
+      else if (c === 0xFF0E) out += '.';
     }
     var v = parseFloat(out);
     return isFinite(v) ? v : null;
@@ -476,20 +493,32 @@
     var days = num('days');
     if (days === null || days <= 0) return null;
     var kfri = num('kfri'), ksat = num('ksat'), ksun = num('ksun');
-    if (kfri === null || kfri <= 0) kfri = 1.25;
-    if (ksat === null || ksat <= 0) ksat = 2.2;
-    if (ksun === null || ksun <= 0) ksun = 2.4;
+    if (kfri === null || kfri <= 0) kfri = 1.30;
+    if (ksat === null || ksat <= 0) ksat = 2.30;
+    if (ksun === null || ksun <= 0) ksun = 2.50;
     var k = [ksun, 1, 1, 1, 1, kfri, ksat];          // 日,月,火,水,木,金,土
     var weekAvg = (4 + kfri + ksat + ksun) / 7;
+    var hol = num('holidays');
+    if (hol === null || hol < 0) hol = 0;
+    hol = Math.min(Math.floor(hol), days);
+
     var startStr = $('start').value;
-    if (!startStr) return { total: days, days: days, adj: 1 };
-    var d = new Date(startStr + 'T00:00:00');
-    var total = 0;
-    for (var n = 0; n < days; n++){
-      total += k[d.getDay()] / weekAvg;
-      d.setDate(d.getDate() + 1);
+    var vals = [];
+    if (!startStr){
+      // 開始日なし＝どの日も「平均的な1日」とみなす。祝日ぶんだけ日曜に置き換える
+      for (var i = 0; i < days; i++) vals.push(weekAvg);
+    } else {
+      var d = new Date(startStr + 'T00:00:00');
+      for (var n = 0; n < days; n++){ vals.push(k[d.getDay()]); d.setDate(d.getDate() + 1); }
     }
-    return { total: total, days: days, adj: total / days };
+    if (hol > 0){
+      var khol = ksun * 0.8;                               // 祝日は日曜の80%
+      vals.sort(function(a,b){ return a - b; });           // 低い日から祝日に置き換える
+      for (var j = 0; j < hol; j++) if (vals[j] < khol) vals[j] = khol;
+    }
+    var total = 0;
+    for (var m2 = 0; m2 < vals.length; m2++) total += vals[m2] / weekAvg;
+    return { total: total, days: days, adj: total / days, hol: hol };
   }
 
   function estimate(){
@@ -503,10 +532,10 @@
       $('autoout').textContent = 'P・M・O：–　（週売上・原価・原価率・日数を入れてください）';
       return null;
     }
-    var perDay = daily / 7;                            // 週売上 → 1日平均
-    var perPiece = pcost / (rate / 100);               // 1個あたり売上
-    var m = (perDay * pf.total) / perPiece;            // 想定払い出し個数
-    var est = { m: Math.round(m), o: Math.round(m * highk), p: Math.round(m * lowk), per: Math.round(perPiece) };
+    var perDay = daily / 7;
+    var perPiece = pcost / (rate / 100);
+    var m = (perDay * pf.total) / perPiece;
+    var est = { m: Math.round(m), o: Math.round(m * highk), p: Math.round(m * lowk), per: Math.round(perPiece), raw: m };
     var note = $('start').value ? '曜日補正 ' + pf.adj.toFixed(2) + '倍　' : '開始日を入れると曜日で補正　';
     $('autoout').textContent = note + '1個あたり売上 ' + comma(est.per) + '円 ／ P ' + est.p + ' ・ M ' + est.m + ' ・ O ' + est.o;
     return est;
@@ -541,7 +570,6 @@
 
   var salvSel = { use: 0.8, fresh: 0.8, food: 0 };
 
-  // 移送・保管の手間（1個あたり）を運賃・人件費から出す
   function moveCost(){
     var trip = num('tripcost'), qty = num('tripqty'), mins = num('worktime'), wage = num('wage');
     if (trip === null || qty === null || qty <= 0){
@@ -557,21 +585,17 @@
     return per;
   }
 
-  // 賞味期限による目減り係数
   function foodFactor(){
     if (!salvSel.food) return 1;
     var exp = $('expiry').value;
     var need = num('selldays');
     if (need === null || need <= 0) need = 30;
     if (!exp){ $('foodout').textContent = '期限による目減り：–　（賞味期限を入れてください）'; return 1; }
-
-    // 投入期間が終わった時点で、期限まで何日残っているか
     var days = num('days') || 0;
     var start = $('start').value ? new Date($('start').value + 'T00:00:00') : new Date();
     var end = new Date(start.getTime());
     end.setDate(end.getDate() + days);
     var left = Math.floor((new Date(exp + 'T00:00:00') - end) / 86400000);
-
     var f;
     if (left <= 0) f = 0;
     else if (left >= need) f = 1;
@@ -582,7 +606,6 @@
     return f;
   }
 
-  // 残存価値 ＝ 仕入価格 × 使い切れる割合 × 旬の価値 × 期限係数 − 移送・保管の手間
   function salvage(){
     var cost = num('cost');
     if (cost === null || cost <= 0){ $('salvout').textContent = '残存価値：–　（仕入価格を入れてください）'; return; }
@@ -590,12 +613,9 @@
     if (move === null) move = 50;
     var disp = num('disposal') || 0;
     var ff = foodFactor();
-
-    // 使い切れる分は価値になり、使い切れない分は廃棄費用がかかる
     var keepRate = salvSel.use * ff;
     var v = cost * keepRate * salvSel.fresh - move * keepRate - disp * (1 - keepRate);
     v = Math.round(v);
-
     $('salv').value = (v < 0 ? '-' : '') + comma(Math.abs(v));
     $('salvout').textContent = '残存価値：' + (v < 0 ? '−' : '') + comma(Math.abs(v)) + '円'
       + (v < 0 ? '（廃棄費用が上回るためマイナス）' : '')
@@ -626,7 +646,6 @@
     });
   });
 
-  // サポート欄を操作した時だけ、残存価値・移送費を自動で埋める
   ['expiry','selldays','cost','disposal'].forEach(function(id){
     $(id).addEventListener('input', function(){ salvage(); calc(); });
   });
@@ -635,16 +654,18 @@
   });
 
   function calc(){
-    var o, m, p;
+    var o, m, p, Mraw = null;
     if (state.input === 'auto'){
       var est = estimate();
-      if (est){ o = est.o; m = est.m; p = est.p; } else { o = m = p = null; }
+      if (est){ o = est.o; m = est.m; p = est.p; Mraw = est.raw; } else { o = m = p = null; }
     } else {
       var mv = manualValues();
-      if (mv){ o = mv.o; m = mv.m; p = mv.p; } else { o = m = p = null; }
+      if (mv){ o = mv.o; m = mv.m; p = mv.p; Mraw = mv.m; } else { o = m = p = null; }
     }
     var warn = $('warn');
     warn.style.display = 'none';
+    var A = $('alert');
+    A.style.display = 'none';
 
     if (state.mode === 'custom'){
       var rev = num('rev'), cost = num('cost'), salv = num('salv') || 0;
@@ -673,6 +694,7 @@
       $('qsub').textContent = state.input === 'auto'
         ? '売上・日数・原価・原価率を入れてください'
         : 'O・M・P を入れてください';
+      last = null;
       return;
     }
     if (o < 0 || m < 0 || p < 0){
@@ -706,12 +728,20 @@
       $('qsub').textContent = crnote + ' ／ 仕入れ単位を入れると単位数で表示';
     }
 
+    // 小口の警告：推定Mが30個を下回ると推定が成立しない
+    if (Mraw !== null && Mraw > 0 && Mraw < 30){
+      A.style.display = 'block';
+      A.innerHTML = '<b>この規模では推定が当たりません。</b>払出30個以下の景品は、検証でも中央154%外れました。'
+        + '数字は参考程度にして、現場の判断を優先してください。';
+    }
+
     last = {
       name: ($('name').value || '').trim(),
       vendor: ($('vendor').value || '').trim(),
-      o: o, m: m, p: p,
+      o: Math.round(o), m: Math.round(m), p: Math.round(p),
       cr: state.reorder ? null : state.cr,
       reorder: state.reorder,
+      days: num('days'),
       qty: qr,
       unit: (unit !== null && unit > 0) ? unit : null,
       uname: uname,
@@ -723,30 +753,23 @@
   var KEY = 'orderqty-records';
 
   function loadRecords(){
-    try {
-      var raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch(e) { return []; }
+    try { var raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e) { return []; }
   }
-
   function storeRecords(list){
     try { localStorage.setItem(KEY, JSON.stringify(list)); return true; }
     catch(e) { return false; }
   }
-
   function toast(msg){
-    var t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
     setTimeout(function(){ t.classList.remove('show'); }, 1800);
   }
-
   function summary(r){
     var head = (r.name || '(名称なし)') + (r.vendor ? '／' + r.vendor : '');
     var qline = r.units
       ? '発注 ' + r.units + r.uname + '（' + r.unit + '個入り ＝ ' + (r.units * r.unit) + '個）'
       : '発注 ' + r.qty + '個';
-    var detail = '見立て P' + r.p + ' / M' + r.m + ' / O' + r.o
+    var detail = '着地の見込み ' + r.p + '〜' + r.o + '個'
       + (r.reorder ? '（追加発注あり前提）' : ' / CR ' + r.cr.toFixed(2));
     return head + '\n' + qline + '\n' + detail;
   }
@@ -756,31 +779,24 @@
     var box = $('hist');
     var names = {};
     box.innerHTML = '';
-    if (!list.length){ $('histcard').style.display = 'none'; }
-    else { $('histcard').style.display = 'block'; }
-
+    $('histcard').style.display = list.length ? 'block' : 'none';
     list.forEach(function(r, i){
       if (r.vendor) names[r.vendor] = 1;
       var d = document.createElement('div');
       d.className = 'rec';
-      var qline = r.units
-        ? r.units + r.uname + '（' + (r.units * r.unit) + '個）'
-        : r.qty + '個';
+      var qline = r.units ? r.units + r.uname + '（' + (r.units * r.unit) + '個）' : r.qty + '個';
       d.innerHTML = '<h3></h3><p></p><div class="recbtns">'
         + '<button data-load="' + i + '">呼び出す</button>'
         + '<button class="del" data-del="' + i + '">削除</button></div>';
       d.querySelector('h3').textContent = (r.name || '(名称なし)') + '　' + qline;
       d.querySelector('p').textContent = (r.vendor ? r.vendor + '／' : '')
-        + r.date + '　P' + r.p + ' M' + r.m + ' O' + r.o;
+        + r.date + '　着地 ' + r.p + '〜' + r.o + '個';
       box.appendChild(d);
     });
-
     var dl = $('vendors');
     dl.innerHTML = '';
     Object.keys(names).forEach(function(n){
-      var opt = document.createElement('option');
-      opt.value = n;
-      dl.appendChild(opt);
+      var opt = document.createElement('option'); opt.value = n; dl.appendChild(opt);
     });
   }
 
@@ -788,10 +804,9 @@
     $('name').value = r.name || '';
     $('vendor').value = r.vendor || '';
     $('o').value = r.o; $('m').value = r.m; $('p').value = r.p;
+    if (r.days) $('days').value = r.days;
     if (r.unit){ $('unit').value = r.unit; $('uname').value = r.uname; }
-    state.reorder = !!r.reorder;
-    $('reorder').setAttribute('aria-pressed', state.reorder ? 'true' : 'false');
-    $('crcard').style.opacity = state.reorder ? '0.45' : '1';
+    setReorder(!!r.reorder);
     if (r.cr){
       state.cr = r.cr; state.mode = 'preset';
       Array.prototype.forEach.call(document.querySelectorAll('#crseg button'), function(b){
@@ -803,7 +818,7 @@
   }
 
   $('save').addEventListener('click', function(){
-    if (!last || last.qty === undefined){ toast('先に O・M・P を入れてください'); return; }
+    if (!last){ toast('先に数字を入れてください'); return; }
     var r = JSON.parse(JSON.stringify(last));
     var d = new Date();
     r.date = d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
@@ -815,42 +830,33 @@
   });
 
   $('share').addEventListener('click', function(){
-    if (!last || last.qty === undefined){ toast('先に O・M・P を入れてください'); return; }
+    if (!last){ toast('先に数字を入れてください'); return; }
     var text = summary(last);
-    if (navigator.share){
-      navigator.share({ text: text }).catch(function(){});
-    } else if (navigator.clipboard){
+    if (navigator.share){ navigator.share({ text: text }).catch(function(){}); }
+    else if (navigator.clipboard){
       navigator.clipboard.writeText(text).then(function(){ toast('コピーしました'); },
         function(){ toast('コピーできませんでした'); });
-    } else {
-      toast('この端末では共有できません');
-    }
+    } else { toast('この端末では共有できません'); }
   });
 
   $('hist').addEventListener('click', function(e){
     var t = e.target;
-    if (t.dataset.load !== undefined){
-      var list = loadRecords();
-      fill(list[parseInt(t.dataset.load, 10)]);
-    }
+    if (t.dataset.load !== undefined){ fill(loadRecords()[parseInt(t.dataset.load, 10)]); }
     if (t.dataset.del !== undefined){
-      var l = loadRecords();
-      l.splice(parseInt(t.dataset.del, 10), 1);
-      storeRecords(l);
-      renderHistory();
-      toast('削除しました');
+      var l = loadRecords(); l.splice(parseInt(t.dataset.del, 10), 1);
+      storeRecords(l); renderHistory(); toast('削除しました');
     }
   });
 
   $('csv').addEventListener('click', function(){
     var list = loadRecords();
     if (!list.length) return;
-    var rows = [['日付','景品名','取引先','P','M','O','CR','発注個数','入数','単位数']];
+    var rows = [['日付','景品名','取引先','日数','下限P','中央M','上限O','CR','発注個数','入数','単位数']];
     list.forEach(function(r){
-      rows.push([r.date, r.name, r.vendor, r.p, r.m, r.o,
+      rows.push([r.date, r.name, r.vendor, r.days || '', r.p, r.m, r.o,
         (r.cr ? r.cr.toFixed(2) : '追加発注あり'), r.qty, r.unit || '', r.units || '']);
     });
-    var csv = '\ufeff' + rows.map(function(row){
+    var csv = '﻿' + rows.map(function(row){
       return row.map(function(c){ return '"' + String(c === null || c === undefined ? '' : c).replace(/"/g,'""') + '"'; }).join(',');
     }).join('\r\n');
     var a = document.createElement('a');
@@ -871,17 +877,41 @@
         state.mode = 'preset';
         state.cr = parseFloat(btn.dataset.cr);
         $('crcalc').open = false;
-        try { localStorage.setItem('orderqty-cr', String(state.cr)); } catch(e) {}
+        try { localStorage.setItem('orderqty-cr2', String(state.cr)); } catch(e) {}
       }
       calc();
     });
   });
 
-  $('reorder').addEventListener('click', function(){
-    state.reorder = $('reorder').getAttribute('aria-pressed') !== 'true';
-    $('reorder').setAttribute('aria-pressed', state.reorder ? 'true' : 'false');
-    $('crcard').style.opacity = state.reorder ? '0.45' : '1';
-    calc();
+  function setReorder(on){
+    state.reorder = !!on;
+    Array.prototype.forEach.call(document.querySelectorAll('#reorderseg button'), function(b){
+      b.setAttribute('aria-pressed', (b.dataset.r === (on ? '1' : '0')) ? 'true' : 'false');
+    });
+    $('reorderout').innerHTML = on
+      ? '<b>「できる」を選択中。</b>控えめな数を出します。売れ行きを見て追加してください。'
+      : '<b>「できない」を選択中。</b>品切れに備えて、安全側に上乗せした数を出します。';
+    $('crcard').style.opacity = on ? '0.45' : '1';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#reorderseg button'), function(btn){
+    btn.addEventListener('click', function(){ setReorder(btn.dataset.r === '1'); calc(); });
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('#holseg button'), function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('#holseg button'), function(b){
+        b.setAttribute('aria-pressed','false');
+      });
+      btn.setAttribute('aria-pressed','true');
+      $('holidays').value = btn.dataset.h;
+      calc();
+    });
+  });
+
+  $('holidays').addEventListener('input', function(){
+    Array.prototype.forEach.call(document.querySelectorAll('#holseg button'), function(b){
+      b.setAttribute('aria-pressed', b.dataset.h === $('holidays').value ? 'true' : 'false');
+    });
   });
 
   Array.prototype.forEach.call(document.querySelectorAll('#dayseg button'), function(btn){
@@ -915,7 +945,7 @@
   });
 
   ['o','m','p','rev','cost','salv','unit','uname','name','vendor',
-   'daily','days','pcost','rate','lowk','highk','start','kfri','ksat','ksun','movecost',
+   'daily','days','pcost','rate','lowk','highk','start','kfri','ksat','ksun','movecost','holidays',
    'expiry','selldays','tripcost','tripqty','worktime','wage','disposal'].forEach(function(id){
     $(id).addEventListener('input', calc);
   });
