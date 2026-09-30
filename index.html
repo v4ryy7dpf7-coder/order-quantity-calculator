@@ -1633,7 +1633,7 @@
       show('発注点 R', intc(Rr), '在庫がこの数以下になったら発注');
       lines.push('<div>R ＝ d × LT ＋ z × σd × √LT</div>');
       lines.push('<div class="k">＝ '+f1(dd.d)+' × '+lt+' ＋ '+f2(z)+' × '+f1(dd.sd)+' × √'+lt+'</div>');
-      lines.push('<div class="k">＝ '+f1(rBase)+' ＋ '+f1(rSafe)+'（安全在庫） ＝ '+f1(R)+' → <b>'+Rr+'個</b></div>');
+      lines.push('<div class="k">＝ '+f1(rBase)+' ＋ '+f1(rSafe)+'（SS） ＝ '+f1(R)+' → <b>'+Rr+'個</b></div>');
       var judge;
       chip.hidden=false;
       if (cs<=Rr){
@@ -1659,7 +1659,7 @@
         lines:['発注量 Q（定期発注）：'+Qr+'個', '発注間隔 '+iv+'日 ／ LT '+lt+'日 ／ 現在庫 '+cs+'個'+csNote, 'd '+f1(dd.d)+' ／ σd '+f1(dd.sd)+' ／ CR '+f2(st.cr)+' ／ z '+f2(z)] };
       lines.push('<div>Q ＝ d ×（i ＋ LT）＋ z × σd × √(i ＋ LT) − CS</div>');
       lines.push('<div class="k">＝ '+f1(dd.d)+' × '+T+' ＋ '+f2(z)+' × '+f1(dd.sd)+' × √'+T+' − '+cs+'</div>');
-      lines.push('<div class="k">＝ '+f1(qBase)+' ＋ '+f1(qSafe)+'（安全在庫） − '+cs+' ＝ '+f1(Q)+' → <b>'+Qr+'個</b></div>');
+      lines.push('<div class="k">＝ '+f1(qBase)+' ＋ '+f1(qSafe)+'（SS） − '+cs+' ＝ '+f1(Q)+' → <b>'+Qr+'個</b></div>');
     } else {
       var y=st.per==='year';
       var wk=num('annual');
